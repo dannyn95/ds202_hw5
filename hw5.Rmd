@@ -1,0 +1,69 @@
+---
+title: "Homework 5"
+author: "Danny Nguyen"
+date: "April 10, 2019"
+output: html_document
+---
+
+Part 1: Data Import
+```{r}
+if (file.exists("alcohol.rds")) {
+  data <- readRDS("alcohol.rds")
+} else {
+  url <- "https://xdaiisu.github.io/ds202materials/data/ames.csv"
+  data <- readr::read_csv(url)
+  saveRDS(data, file="alcohol.rds")
+} 
+
+dat <- readRDS('alcohol.rds')
+```
+
+
+Part 2: Data Cleaning: During the cleaning and kniting of the data, It shows a long list of the data. It can be skipped over.
+```{r}
+#extract geographic latitude and longitude from the variable Store Location
+library(dplyr)
+library(tidyr)
+library(lubridate)
+data_clean_1 <- data %>% separate('Store Location', c("address1", "address2", "coords"), sep = "\n") %>% select(-address1, -address2) %>% mutate(coords = gsub("[()]", "", coords)) %>%
+separate(coords, c("Latitude", "Longitude"), sep = ",") 
+
+#check variable types. Pick five variables that need to be converted to a different type and fix those. (Latitude, Longitude, State Bottle Cost, State Bottle Retail, Volume Sold (Liters), Volume Sold (Gallons)) : I chose 6 variables because it just evened out the changes.
+as.double(data_clean_1$Latitude, data_clean_1$Longitude, data_clean_1$`State Bottle Cost`, data_clean_1$`State Bottle Retail`, data_clean_1$`Volume Sold (Liters)`, data_clean_1$`Volume Sold (Gallons)`)
+
+#extract year, month and day from the variable Date
+data_clean_1$Date <- as.Date(data_clean_1$Date, "%m/%d/%Y")
+data_clean_1 <- separate(data_clean_1, 'Date', c("Year", "Month", "Day"), sep = "-")
+
+```
+
+Part 3a: First Overview
+```{r}
+#Plot a scatterplot of lat and long of store locations.
+library(ggplot2)
+data_clean_1 %>% ggplot(aes(x = Longitude, y = Latitude)) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+Part 3b: First Overview
+Unfortunately, I was unable to remember how to condense the number of plots.
+```{r}
+#Provide a visual breakdown of the liquor category (by Category Name). Include volume sold in the breakdown.
+
+ggplot(data_clean_1, aes(y = data_clean_1$`Volume Sold (Liters)`)) + geom_boxplot() + facet_wrap(~data_clean_1$`Category Name`) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+Part 4: Data Patterns
+```{r}
+#Find the daily sales liquor sales in Ames in 2018. Summarize number of sales, volume of liquor sold and amount of money spent. Plot volume sold by day (use a scatterplot of volume by day and facet by month). Describe any patterns. Find the dates for ISU football home games in Fall 2018. Can you see a pattern?
+
+summary(data_clean_1)
+
+ggplot(data_clean_1, aes(x = data_clean_1$Day, y = data_clean_1$`Volume Sold (Liters)`)) + geom_point() + facet_wrap(~data_clean_1$Month) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#From what I can tell in terms of patterns, it seems that the number of alcohol sales increase during the holiday months.
+
+#Duting the days of home football games, there appears to be a slight increase in alcohol sales.
+
+
+```
